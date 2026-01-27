@@ -26,14 +26,15 @@ class GameScene extends Phaser.Scene {
   onTimerTick() {
     this.timeoutText.setText("Time:" + this.timeout);
     if (this.timeout <= 0) {
+      this.timer.paused = true;
       this.sounds.timeout.play();
-      this.start();
+      this.restart();
     } else {
       --this.timeout;
     }
   }
   createTimer() {
-    this.time.addEvent({
+    this.timer = this.time.addEvent({
       delay: 1000,
       callback: this.onTimerTick,
       callbackScope: this,
@@ -59,16 +60,36 @@ class GameScene extends Phaser.Scene {
     this.createCards();
     this.start();
   }
+  restart() {
+    let count = 0;
+    let onCardMoveComplete = () => {
+      count++;
+      if (count >= this.cards.length) {
+        this.start();
+      }
+    };
+
+    this.cards.forEach((card) => {
+      card.move({
+        x: this.sys.game.config.width + card.width,
+        y: this.sys.game.config.height + card.height,
+        delay: card.position.delay,
+        callback: onCardMoveComplete,
+      });
+    });
+  }
   start() {
+    this.initCardsPositions();
     this.timeout = config.timeout;
     this.openedCard = null;
     this.openedCardCount = 0;
+    this.timer.paused = false;
     this.initCards();
     this.showCards();
   }
 
   initCards() {
-    let positions = this.getCardsPositions();
+    let positions = Phaser.Utils.Array.Shuffle(this.positions);
 
     this.cards.forEach((card) => {
       card.init(positions.pop());
@@ -76,6 +97,7 @@ class GameScene extends Phaser.Scene {
   }
   showCards() {
     this.cards.forEach((card) => {
+      card.depth = card.position.delay;
       card.move({
         x: card.position.x,
         y: card.position.y,
@@ -89,8 +111,6 @@ class GameScene extends Phaser.Scene {
   }
   createCards() {
     this.cards = [];
-    let positions = this.getCardsPositions();
-    Phaser.Utils.Array.Shuffle(positions);
 
     for (let value of config.cards) {
       for (let i = 0; i < 2; i++) {
@@ -125,14 +145,14 @@ class GameScene extends Phaser.Scene {
       this.openedCard = card;
     }
 
-    card.open();
-
-    if (this.openedCardCount === this.cards.length / 2) {
-      this.sounds.complete.play();
-      this.start();
-    }
+    card.open(() => {
+      if (this.openedCardCount === this.cards.length / 2) {
+        this.sounds.complete.play();
+        this.restart();
+      }
+    });
   }
-  getCardsPositions() {
+  initCardsPositions() {
     let positions = [];
     let cardTexture = this.textures.get("card").getSourceImage();
 
@@ -156,6 +176,6 @@ class GameScene extends Phaser.Scene {
         });
       }
     }
-    return Phaser.Utils.Array.Shuffle(positions);
+    this.positions = positions;
   }
 }
