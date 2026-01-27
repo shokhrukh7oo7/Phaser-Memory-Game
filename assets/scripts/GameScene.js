@@ -11,8 +11,16 @@ class GameScene extends Phaser.Scene {
     this.load.image("card4", "assets/sprites/card4.png");
     this.load.image("card5", "assets/sprites/card5.png");
   }
+  createText() {
+    this.timeoutText = this.add.text(10, 330, "Time:", {
+      font: "32px CurseCasual",
+      fill: "#ffffff",
+    });
+    console.log(this.timeoutText);
+  }
   create() {
     this.createBackground();
+    this.createText();
     this.createCards();
     this.start();
   }
@@ -80,8 +88,12 @@ class GameScene extends Phaser.Scene {
 
     let cardWidth = cardTexture.width + 4;
     let cardHeight = cardTexture.height + 4;
-    let offsetX = (this.sys.game.config.width - cardWidth * config.cols) / 2 + cardWidth / 2;
-    let offsetY = (this.sys.game.config.height - cardHeight * config.rows) / 2 + cardHeight / 2;
+    let offsetX =
+      (this.sys.game.config.width - cardWidth * config.cols) / 2 +
+      cardWidth / 2;
+    let offsetY =
+      (this.sys.game.config.height - cardHeight * config.rows) / 2 +
+      cardHeight / 2;
 
     for (let row = 0; row < config.rows; row++) {
       for (let col = 0; col < config.cols; col++) {
