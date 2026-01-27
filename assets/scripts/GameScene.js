@@ -14,6 +14,21 @@ class GameScene extends Phaser.Scene {
   create() {
     this.createBackground();
     this.createCards();
+    this.start();
+  }
+  start() {
+    this.openedCard = null;
+    this.openedCardCount = 0;
+    this.initCards();
+  }
+  initCards() {
+    let positions = this.getCardsPositions();
+
+    this.cards.forEach((card) => {
+      let position = positions.pop();
+      card.close();
+      card.setPosition(position.x, position.y);
+    });
   }
   createBackground() {
     let bg = this.add.sprite(0, 0, "bg").setOrigin(0, 0);
@@ -26,14 +41,38 @@ class GameScene extends Phaser.Scene {
 
     for (let value of config.cards) {
       for (let i = 0; i < 2; i++) {
-        this.cards.push(new Card(this, value, positions.pop()));
+        this.cards.push(new Card(this, value));
       }
     }
 
     this.input.on("gameobjectdown", this.onCardClicked, this);
   }
   onCardClicked(pointer, card) {
+    if (card.opened) {
+      return false;
+    }
+
+    if (this.openedCard) {
+      // уже есть открытая карта
+      if (this.openedCard.value === card.value) {
+        // картинки одинаковые - запомнить
+        this.openedCard = null;
+        this.openedCardCount++;
+      } else {
+        // картинка разные - скрыть прошлую
+        this.openedCard.close();
+        this.openedCard = card;
+      }
+    } else {
+      // еще нет открытой карты
+      this.openedCard = card;
+    }
+
     card.open();
+
+    if (this.openedCardCount === this.cards.length / 2) {
+      this.start();
+    }
   }
   getCardsPositions() {
     let positions = [];
@@ -52,6 +91,6 @@ class GameScene extends Phaser.Scene {
         });
       }
     }
-    return positions;
+    return Phaser.Utils.Array.Shuffle(positions);
   }
 }
