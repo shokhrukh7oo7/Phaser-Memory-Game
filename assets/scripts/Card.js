@@ -47,7 +47,7 @@ class Card extends Phaser.GameObjects.Sprite {
   show(callback) {
     let texture = this.opened ? "card" + this.value : "card";
     this.setTexture(texture);
-    this.scene.tweens.add({
+    this.scene.tweens.add({ 
       targets: this,
       scaleX: 1,
       ease: "Linear",
